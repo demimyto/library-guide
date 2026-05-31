@@ -1,0 +1,54 @@
+<!-- Модальное окно для управления обложкой книги -->
+<div class="modal fade" id="coverModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content cover-modal">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">Обложка книги</h5>
+                    <p class="modal-subtitle" id="coverBookTitle">Название книги</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть" id="btnCloseCoverModal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="file" id="coverFileInput" accept="image/jpeg,image/png,image/webp" style="display: none;">
+                <input type="hidden" id="coverBookId">
+                
+                <!-- Drag & Drop зона -->
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-zone-content" id="dropZoneContent">
+                        <div class="drop-zone-icon">📚</div>
+                        <div class="drop-zone-text">Перетащите файл сюда</div>
+                        <div class="drop-zone-hint">или кликните для выбора</div>
+                        <div class="drop-zone-hint">Макс. размер: 2MB (автосжатие)</div>
+                    </div>
+                    <div class="drop-zone-preview" id="dropZonePreview" style="display: none;">
+                        <img src="" alt="Превью" id="previewImage">
+                    </div>
+                </div>
+                
+                <!-- Инфо о файле -->
+                <div class="file-info mt-3" id="fileInfo" style="display: none;">
+                    <span>📄</span>
+                    <span id="fileName">filename.jpg</span>
+                    <span id="fileSize" class="text-muted"></span>
+                </div>
+                
+                <!-- Сообщение об ошибке -->
+                <div class="alert alert-danger mt-3" id="coverError" style="display: none;"></div>
+                
+                <!-- Действия -->
+                <div class="cover-actions mt-4">
+                    <button type="button" class="btn btn-primary" id="btnSaveCover" disabled>
+                        💾 Сохранить
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" id="btnDeleteCover" style="display: none;">
+                        🗑️ Удалить
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="btnReplaceCover" style="display: none;">
+                        🔄 Заменить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

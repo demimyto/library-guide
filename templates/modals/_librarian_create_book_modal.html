@@ -1,0 +1,83 @@
+<!-- Модальное окно создания новой книги (для библиотекаря) -->
+<div class="modal fade" id="librarianCreateBookModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">Создать новую книгу</h5>
+                    <p class="modal-subtitle">Книга будет добавлена в общий каталог</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <form id="librarian-create-book-form" enctype="multipart/form-data">
+                    <!-- Название -->
+                    <div class="mb-3">
+                        <label class="form-label">Название книги *</label>
+                        <input type="text" name="title" class="form-control" required 
+                               placeholder="Введите название книги">
+                    </div>
+
+                    <!-- Жанр с комбобоксом -->
+                    <div class="mb-3">
+                        <label class="form-label">Жанр *</label>
+                        <div class="genre-combobox">
+                            <input type="text" class="form-control" id="librarianGenreInput" 
+                                placeholder="Выберите или введите жанр" autocomplete="off" required>
+                            <div class="genre-dropdown" id="librarianGenreDropdown" style="display: none;">
+                                <input type="text" class="genre-search" id="librarianGenreSearch" 
+                                    placeholder="Поиск жанра...">
+                                <div class="genre-list" id="librarianGenreList"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="librarianGenreHidden" name="genre" required>
+                    </div>
+
+                    <!-- Описание -->
+                    <div class="mb-3">
+                        <label class="form-label">Описание</label>
+                        <textarea name="description" id="librarianBookDescription" rows="4" 
+                                  placeholder="Описание книги (поддерживается Markdown)"></textarea>
+                    </div>
+
+                    <!-- Обложка -->
+                    <div class="mb-3">
+                        <label class="form-label">Обложка книги</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" 
+                                    id="librarian-upload-cover-btn" data-entity-type="book">
+                                📷 Загрузить обложку
+                            </button>
+                            <input type="hidden" name="cover_filename" id="librarian-cover-filename">
+                            <div id="librarian-cover-preview" class="d-none">
+                                <img src="" alt="Превью" style="max-height: 60px; border-radius: 4px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Авторы -->
+                    <div class="mb-3">
+                        <label class="form-label">Авторы *</label>
+                        <div class="d-flex gap-2 align-items-start flex-wrap">
+                            <button type="button" class="btn btn-outline-primary" id="librarian-select-authors-btn">
+                                👥 Выбрать авторов
+                            </button>
+                            <input type="hidden" name="author_ids" id="librarian-author-ids" required>
+                            <div id="librarian-selected-authors" class="selected-authors-tags mt-2">
+                                <span class="text-muted">Авторы не выбраны</span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="librarian-back-to-search">
+                    ← Назад к поиску
+                </button>
+                <button type="button" class="btn btn-success" id="librarian-save-book">
+                    Создать книгу
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

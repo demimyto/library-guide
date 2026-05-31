@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Уведомления — Справочная библиотек{% endblock %}
+{% block search_button %}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Уведомления</h1>
+            <p class="text-muted mb-0">История всех ваших уведомлений</p>
+        </div>
+        <button class="btn btn-outline-secondary" id="markAllReadBtn">
+            ✔️ Отметить все как прочитанные
+        </button>
+    </div>
+    
+    <div class="card admin-card">
+        <div class="card-body p-0">
+            <div id="notificationsList" class="notifications-list">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="pagination" class="d-flex justify-content-center py-3"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/user/profile_notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/core/review_modal.js') }}"></script>
+{% endblock %}

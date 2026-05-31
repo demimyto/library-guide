@@ -1,0 +1,72 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Отзывы — Админ-панель{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>💬 Модерация отзывов</h1>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="card admin-card mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Статус</label>
+                    <select class="form-select" id="reviewStatusFilter">
+                        <option value="pending">Ожидают</option>
+                        <option value="edited">Отредактированы</option>
+                        <option value="approved">Одобрены</option>
+                        <option value="rejected">Отклонены</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список отзывов -->
+    <div class="card admin-card">
+        <div class="card-body p-0">
+            <div id="adminReviewsList">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Пагинация -->
+    <div class="d-flex justify-content-center mt-3" id="adminReviewsPagination"></div>
+</div>
+
+<!-- Модалка отклонения -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Отклонить отзыв</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="rejectReviewId">
+                <div class="mb-3">
+                    <label class="form-label">Причина отклонения</label>
+                    <textarea class="form-control" id="rejectReason" rows="3" 
+                              placeholder="Укажите, что не так с отзывом..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmReject">Отклонить</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/admin/admin.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin/reviews.js') }}"></script>
+{% endblock %}

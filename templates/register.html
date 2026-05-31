@@ -1,32 +1,96 @@
 {% extends "base.html" %}
 
+{% block title %}Регистрация — Справочная библиотек{% endblock %}
+{% block search_button %}{% endblock %}
+
 {% block content %}
 <div class="auth-container">
-    <h2>Регистрация</h2>
-    {% with messages = get_flashed_messages() %}
+    <div class="auth-header">
+        <h1>Создать аккаунт</h1>
+        <p class="text-muted">Заполните форму для регистрации</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-info">{{ message }}</div>
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else ('success' if category == 'success' else category) }} mb-4">
+                    {{ message }}
+                </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
-    <form method="POST" class="auth-form">
-        <div class="form-group">
-            <label for="username">Имя пользователя:</label>
-            <input type="text" class="form-control" id="username" name="username" required>
+    
+    <form method="POST" class="auth-form" id="registerForm">
+        <!-- Имя пользователя -->
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="username" name="username" 
+                   placeholder="Имя пользователя" required autofocus>
+            <label for="username">Имя пользователя</label>
+            <div class="validation-icon-wrapper">
+                <span class="validation-icon" id="usernameStatus"></span>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="email">Email:</label>
-            <input type="email" class="form-control" id="email" name="email" required>
+        
+        <!-- Email -->
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control" id="email" name="email" 
+                   placeholder="Email" required>
+            <label for="email">Email</label>
+            <div class="validation-icon-wrapper">
+                <span class="validation-icon" id="emailStatus"></span>
+            </div>
+            <div class="email-error-message" id="emailErrorMessage"></div>
         </div>
-        <div class="form-group">
-            <label for="password">Пароль:</label>
-            <input type="password" class="form-control" id="password" name="password" required>
+        
+        <!-- Пароль -->
+        <div class="form-floating mb-2">
+            <input type="password" class="form-control" id="password" name="password" 
+                   placeholder="Пароль" required>
+            <label for="password">Пароль</label>
+            <div class="validation-icon-wrapper">
+                <span class="validation-icon" id="passwordStatus"></span>
+            </div>
+            <button type="button" class="password-toggle" id="togglePassword">😑</button>
         </div>
-        <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+        
+        <!-- Индикатор сложности пароля -->
+        <div class="password-strength mb-3">
+            <div class="strength-bar">
+                <div class="strength-fill" id="strengthBar"></div>
+            </div>
+            <span class="strength-text" id="strengthText"></span>
+        </div>
+        
+        <!-- Кнопка генерации пароля -->
+        <div class="mb-3">
+            <button type="button" class="btn-generate-password w-100" id="generatePasswordBtn">
+                🔄 Сгенерировать пароль
+            </button>
+        </div>
+        
+        <!-- Подтверждение пароля -->
+        <div class="form-floating mb-4">
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                   placeholder="Подтверждение пароля" required>
+            <label for="confirm_password">Подтверждение пароля</label>
+            <div class="validation-icon-wrapper">
+                <span class="validation-icon" id="confirmStatus"></span>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary w-100 btn-lg" id="submitBtn" disabled>
+            Зарегистрироваться
+        </button>
     </form>
-    <div class="auth-links">
-        <a href="{{ url_for('login') }}">Уже есть аккаунт? Войти</a>
+    
+    <div class="auth-footer">
+        <p>Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
     </div>
 </div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/user/register.js') }}"></script>
 {% endblock %}

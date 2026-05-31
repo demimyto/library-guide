@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог книг — Библиотекарь</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body data-user-authenticated="true" data-user-admin="{% if current_user.is_admin() %}true{% else %}false{% endif %}">
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a href="{{ url_for('index') }}" class="navbar-brand mb-0 h1">Справочная библиотек</a>
+            <div class="d-flex align-items-center gap-3">
+                <a href="{{ url_for('librarian_dashboard') }}" class="nav-link text-light">← Назад к панели</a>
+                <div class="user-menu">
+                    <button class="user-menu-button" id="userMenuButton">
+                        <div class="user-avatar-mini">{{ current_user.username[0]|upper }}</div>
+                    </button>
+                    <div class="user-menu-dropdown" id="userMenuDropdown">
+                        {% if current_user.is_admin() %}
+                        <a href="{{ url_for('admin_fund') }}" class="user-menu-item">Админ-панель</a>
+                        {% endif %}
+                        <a href="{{ url_for('logout') }}" class="user-menu-item text-danger">Выйти</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Заголовок -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1>Каталог книг</h1>
+                <p class="text-muted mb-0">
+                    {% if libraries|length == 1 %}
+                        {{ libraries[0].name }}
+                    {% else %}
+                        {{ libraries|length }} библиотек
+                    {% endif %}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="search-nav-button" data-bs-toggle="modal" data-bs-target="#searchModal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <span>Поиск</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Фильтр по библиотеке (если несколько) -->
+        {% if libraries|length > 1 %}
+        <div class="card admin-card mb-4">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3">
+                    <label class="form-label mb-0">Фильтр по библиотеке:</label>
+                    <select class="form-select form-select-sm" id="libraryFilter" style="width: auto;">
+                        <option value="">Все библиотеки</option>
+                        {% for lib in libraries %}
+                        <option value="{{ lib.id }}">{{ lib.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Список книг -->
+        {% if books %}
+        <div class="books-grid" id="booksGrid">
+            {% for book in books %}
+            <article class="book-card-new" data-book-id="{{ book.id }}">
+                <div class="book-cover-container">
+                    {% if book.cover_filename %}
+                        {% set cover_url = url_for('static', filename='uploads/covers/' + book.cover_filename) %}
+                        <div class="book-cover-bg" style="background-image: url('{{ cover_url }}')"></div>
+                        <img src="{{ cover_url }}" alt="{{ book.title }}" loading="lazy">
+                    {% else %}
+                        <div class="cover-placeholder-full">📚</div>
+                    {% endif %}
+                </div>
+                
+                <div class="book-card-info">
+                    <h3 class="book-card-title" title="{{ book.title }}">{{ book.title }}</h3>
+                    
+                    {% set authors_list = book.authors %}
+                    {% if authors_list %}
+                        {% set first_author = authors_list[0] %}
+                        {% set has_more = authors_list|length > 1 %}
+                        
+                        <p class="book-card-authors">
+                            <a href="{{ url_for('author_page', author_id=first_author.id) }}" 
+                               onclick="event.stopPropagation()"
+                               class="book-card-author-link">
+                                {{ first_author.name }}
+                            </a>
+                            {% if has_more %}
+                                <span class="book-card-authors-more">и ещё {{ authors_list|length - 1 }}</span>
+                            {% endif %}
+                        </p>
+                    {% else %}
+                        <p class="book-card-authors">{{ book.author }}</p>
+                    {% endif %}
+                    
+                    <!-- Доступность в библиотеках библиотекаря -->
+                    {% if book_availability[book.id].is_available %}
+                        <div class="availability-indicator">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M8 12l2 2 6-6"></path>
+                            </svg>
+                            <span>Доступно</span>
+                        </div>
+                    {% else %}
+                        <div class="book-unavailable">Нет в наличии</div>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📚</div>
+            <h3>Книги не найдены</h3>
+            <p class="text-muted">В ваших библиотеках пока нет книг</p>
+            <a href="{{ url_for('librarian_add_book') }}" class="btn btn-outline-primary mt-3">
+                Добавить первую книгу
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Модальные окна -->
+    {% include 'modals/_book_modal.html' %}
+    {% include 'modals/_book_authors_modal.html' %}
+    {% include 'modals/_edit_book_modal.html' %}
+    {% include 'modals/_search_modal.html' %}
+
+    <!-- Toast уведомления -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+    <script src="{{ url_for('static', filename='js/core/search.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/core/book_modal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/core/book_ratings.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/librarian/catalog.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Статистика — Админ-панель{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>📊 Статистика</h1>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" onclick="window.print()">🖨 Печать / PDF</button>
+            <button class="btn btn-outline-success" id="btnExportCSV">📥 Скачать CSV</button>
+        </div>
+    </div>
+
+    <!-- Общая статистика -->
+    <div class="stats-grid mb-4" id="totalStats">
+        <div class="stat-card"><h3 id="statBooks">—</h3><p>Книг в базе</p></div>
+        <div class="stat-card"><h3 id="statLibraries">—</h3><p>Библиотек</p></div>
+        <div class="stat-card"><h3 id="statUsers">—</h3><p>Пользователей</p></div>
+        <div class="stat-card success"><h3 id="statActiveReservations">—</h3><p>Активных броней</p></div>
+        <div class="stat-card warning"><h3 id="statAvgReturn">—</h3><p>Среднее время возврата (дней)</p></div>
+    </div>
+
+    <!-- Графики -->
+    <div class="row g-4 mb-4">
+        <!-- Круговая диаграмма: жанры -->
+        <div class="col-lg-6">
+            <div class="card admin-card h-100">
+                <div class="card-header card-header-books">
+                    <h3><span>🎨</span> Книги по жанрам</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="genresChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Столбчатая диаграмма: бронирования по месяцам -->
+        <div class="col-lg-6">
+            <div class="card admin-card h-100">
+                <div class="card-header card-header-binding">
+                    <h3><span>📅</span> Бронирования по месяцам</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="monthsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Топ-10 книг -->
+        <div class="col-lg-6">
+            <div class="card admin-card h-100">
+                <div class="card-header card-header-copies">
+                    <h3><span>🏆</span> Топ-10 книг по бронированиям</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="topBooksChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Топ-5 должников -->
+        <div class="col-lg-6">
+            <div class="card admin-card h-100">
+                <div class="card-header" style="border-left: 4px solid var(--danger);">
+                    <h3><span>⚠️</span> Топ-5 должников</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="debtorsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/admin/stats.js') }}"></script>
+{% endblock %}

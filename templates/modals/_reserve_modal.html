@@ -1,0 +1,38 @@
+<!-- Модальное окно для выбора библиотеки -->
+<div class="modal fade" id="reserveModal{{ book.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">Бронирование</h5>
+                    <p class="modal-subtitle">{{ book.title }}</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('reserve_book', book_id=book.id) }}">
+                    <div class="mb-4">
+                        <label class="form-label">Выберите библиотеку</label>
+                        <select name="library_id" class="form-select form-select-lg" required>
+                            <option value="">-- Выберите библиотеку --</option>
+                            {% for library in book_availability[book.id].available_libraries %}
+                                {% set available_copies = get_available_copies_count(book.id, library.id) %}
+                                <option value="{{ library.id }}">
+                                    {{ library.name }} — {{ library.address }}
+                                    ({{ get_available_copies_count(book.id, library.id) }} экз.)
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text mt-2">
+                            Выбирайте библиотеку с наибольшим количеством доступных экземпляров
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Подтвердить бронирование</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,163 +1,59 @@
 {% extends "base.html" %}
 
+{% block title %}Каталог книг — Справочная библиотек{% endblock %}
+
 {% block content %}
-<div class="user-info">
-    {% if current_user.is_authenticated %}
-        <div class="d-flex align-items-center gap-2">
-            <span>Вы вошли как: {{ current_user.username }}</span>
-            {% if current_user.is_admin() %}
-                <button class="btn btn-sm btn-warning" disabled>Администратор</button>
-            {% else %}
-                <button class="btn btn-sm btn-info" disabled>Пользователь</button>
-            {% endif %}
-            <a href="{{ url_for('logout') }}" class="btn btn-sm btn-danger">Выйти</a>
+<div class="container py-4">
+    <!-- Results Info -->
+    {% if request.args.get('q') %}
+        <div class="results-info mb-4">
+            <p>
+                Результаты поиска: <strong>"{{ request.args.get('q') }}"</strong>
+                <span class="filter-badge">{{ 
+                    {'all': 'везде', 'title': 'в названии', 'author': 'в авторе', 'genre': 'в жанре'}
+                    .get(request.args.get('filter', 'all'), 'везде') 
+                }}</span>
+            </p>
+        </div>
+    {% endif %}
+
+    <!-- Books Grid -->
+    {% if books %}
+        <div class="books-grid">
+            {% for book in books %}
+                {% include 'modals/_book_card.html' %}
+            {% endfor %}
         </div>
     {% else %}
-        <div class="d-flex align-items-center gap-2">
-            <a href="{{ url_for('login') }}" class="btn btn-sm btn-primary">Войти</a>
-            <a href="{{ url_for('register') }}" class="btn btn-sm btn-outline-primary">Зарегистрироваться</a>
+        <div class="empty-state">
+            <div class="empty-icon">📚</div>
+            <h3>Книги не найдены</h3>
+            <p class="text-muted">Попробуйте изменить параметры поиска</p>
+            {% if request.args.get('q') %}
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary mt-3">Сбросить фильтры</a>
+            {% endif %}
         </div>
     {% endif %}
 </div>
 
-<div class="mb-4">
-    <form method="GET" action="{{ url_for('index') }}" class="row g-3">
-        <div class="col-md-4">
-            <input type="text" name="title" class="form-control" placeholder="Название" value="{{ request.args.get('title', '') }}">
-        </div>
-        <div class="col-md-4">
-            <input type="text" name="author" class="form-control" placeholder="Автор" value="{{ request.args.get('author', '') }}">
-        </div>
-        <div class="col-md-4">
-            <input type="text" name="genre" class="form-control" placeholder="Жанр" value="{{ request.args.get('genre', '') }}">
-        </div>
-        <div class="col-12">
-            <button type="submit" class="btn btn-primary">Поиск</button>
-            <a href="{{ url_for('index') }}" class="btn btn-secondary">Сбросить</a>
-        </div>
-    </form>
-</div>
-
-{% if books %}
-    <div class="books-grid">
-    {% for book in books %}
-        <div class="book-card">
-            <div class="book-title">{{ book.title }}</div>
-            <div class="book-author">{{ book.author }}</div>
-            <div class="book-genre">{{ book.genre }}</div>
-            
-            <!-- ИСПРАВЛЕННЫЙ БЛОК: показываем только доступные библиотеки -->
-            {% set availability = book_availability[book.id] %}
-            {% if availability.available_libraries %}
-            <div class="libraries-section">
-                <div class="libraries-title">Доступно в библиотеках:</div>
-                <ul class="libraries-list">
-                    {% for library in availability.available_libraries %}
-                    <li class="library-item">{{ library.name }} — {{ library.address }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% else %}
-            <div class="libraries-section">
-                <div class="no-libraries">Нет доступных экземпляров в библиотеках</div>
-            </div>
-            {% endif %}
-            
-            <!-- Кнопка бронирования -->
-            <div class="reservation-section">
-                {% if current_user.is_authenticated %}
-                    
-                    {% if availability.is_available %}
-                        <button type="button" class="btn btn-success btn-sm w-100" data-bs-toggle="modal" data-bs-target="#reserveModal{{ book.id }}">
-                            📖 Забронировать
-                        </button>
-                        <!-- УБРАЛИ блок с количеством библиотек -->
-                    {% else %}
-                        <button class="btn btn-secondary btn-sm w-100" disabled>
-                            ❌ Недоступно
-                        </button>
-                    {% endif %}
-                {% else %}
-                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-sm w-100">
-                        🔐 Войдите для бронирования
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Модальное окно для выбора библиотеки -->
-        {% if current_user.is_authenticated and availability.is_available %}
-        <div class="modal fade" id="reserveModal{{ book.id }}" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Бронирование: {{ book.title }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form method="POST" action="{{ url_for('reserve_book', book_id=book.id) }}">
-                            <div class="mb-3">
-                                <label class="form-label">Выберите библиотеку:</label>
-                                <select name="library_id" class="form-select" required>
-                                    <option value="">-- Выберите библиотеку --</option>
-                                    {% for library in availability.available_libraries %}
-                                        {% set available_copies = get_available_copies_count(book.id, library.id) %}
-                                        <option value="{{ library.id }}">
-                                            {{ library.name }} — {{ library.address }}
-                                            {% if available_copies > 0 %}
-                                                <span class="badge bg-success ms-2">
-                                                    Доступно {{ available_copies }} экз.
-                                                </span>
-                                            {% endif %}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                <div class="form-text">
-                                    Выбирайте библиотеку с наибольшим количеством доступных экземпляров
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                                <button type="submit" class="btn btn-primary">Подтвердить бронирование</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
+<!-- Модальные окна для бронирования -->
+{% if current_user.is_authenticated %}
+    {% for book in books if book_availability[book.id].is_available %}
+        {% include 'modals/_reserve_modal.html' with context %}
     {% endfor %}
-    </div>
-{% else %}
-    <div class="alert alert-warning text-center">Книги не найдены</div>
 {% endif %}
 
-{% if request.args.get('title') or request.args.get('author') or request.args.get('genre') %}
-<div class="mt-4">
-    <hr>
-    <h5>Результаты поиска:</h5>
-    <p class="text-muted">
-        Поисковый запрос: 
-        {% if request.args.get('title') %}<strong>Название:</strong> "{{ request.args.get('title') }}" {% endif %}
-        {% if request.args.get('author') %}<strong>Автор:</strong> "{{ request.args.get('author') }}" {% endif %}
-        {% if request.args.get('genre') %}<strong>Жанр:</strong> "{{ request.args.get('genre') }}" {% endif %}
-    </p>
-</div>
-{% endif %}
-
-<!-- Уведомления -->
+<!-- Toast Notifications -->
 <div class="toast-container position-fixed top-0 end-0 p-3">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-            <div class="toast align-items-center text-white bg-{% if category == 'success' %}success{% else %}danger{% endif %} border-0" role="alert">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        {{ message }}
+                <div class="toast align-items-center text-white bg-{{ 'danger' if category == 'error' else category }} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">{{ message }}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                     </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
-            </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
@@ -166,13 +62,18 @@
 
 {% block scripts %}
 <script>
-// Активация всплывающих уведомлений
 document.addEventListener('DOMContentLoaded', function() {
     var toastElList = [].slice.call(document.querySelectorAll('.toast'))
     var toastList = toastElList.map(function(toastEl) {
         return new bootstrap.Toast(toastEl, {autohide: true, delay: 5000})
     })
     toastList.forEach(toast => toast.show())
-})
+});
+document.querySelectorAll('.book-card-new').forEach(card => {
+    card.addEventListener('click', function() {
+        const bookId = this.dataset.bookId;
+        openBookModal(bookId, 'catalog');
+    });
+});
 </script>
 {% endblock %}
