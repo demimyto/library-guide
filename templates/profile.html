@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block title %}Личный кабинет — Справочная библиотек{% endblock %}
+{% block search_button %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Profile Header -->
+    <div class="profile-header mb-5">
+        <div class="profile-info">
+            <div class="profile-avatar">
+                {{ current_user.username[0]|upper }}
+            </div>
+            <div class="profile-details">
+                <h1>{{ current_user.username }}</h1>
+                <p class="text-muted">{{ current_user.email }}</p>
+                {% if current_user.role == 'admin' %}
+                    <span class="badge bg-dark">Администратор</span>
+                {% elif current_user.role == 'librarian' %}
+                    <span class="badge bg-info">Библиотекарь</span>
+                {% else %}
+                    <span class="badge bg-primary">Пользователь</span>
+                {% endif %}
+                {% if current_user.is_blocked %}
+                    <span class="badge-danger-outline ms-2">🔒 Заблокирован</span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+            ← Вернуться к каталогу
+        </a>
+    </div>
+
+    <!-- Вкладки -->
+    <ul class="nav nav-tabs mb-4" id="profileTabs">
+        <li class="nav-item">
+            <button class="nav-link active" data-tab="reservations">📋 Бронирования</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-tab="reviews">💬 Мои отзывы</button>
+        </li>
+    </ul>
+
+    <!-- Контейнер бронирований -->
+    <div id="tabReservations">
+        <!-- Active Reservations -->
+        <section class="content-section mb-5">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2>Активные бронирования</h2>
+                    <span class="badge badge-count">{{ active|length }}</span>
+                </div>
+            </div>
+            
+            <div class="section-body">
+                {% if active %}
+                    <div class="reservations-grid">
+                        {% for res in active %}
+                            <div class="reservation-card" data-status="{{ res.status }}">
+                                <div class="reservation-header">
+                                    <span class="reservation-number">{{ res.reservation_number }}</span>
+                                    <span class="badge badge-{{ res.status }}">
+                                        {% if res.status == 'pending' %}⏳ Ожидает подтверждения
+                                        {% elif res.status == 'ready' %}✅ Готово к выдаче
+                                        {% elif res.status == 'taken' %}📖 Выдано (на руках)
+                                        {% elif res.status == 'expired' %}⚠️ Просрочено
+                                        {% elif res.status == 'rejected' %}❌ Отклонено
+                                        {% elif res.status == 'cancelled' %}✗ Отменено
+                                        {% else %}{{ res.status }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                <div class="reservation-book">
+                                    <h4>{{ res.book.title }}</h4>
+                                    <p>{{ res.book.author }}</p>
+                                </div>
+                                
+                                <div class="reservation-library-container">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                    </svg>
+                                    <span>{{ res.library.name }}</span>
+                                </div>
+                                
+                                <div class="reservation-dates">
+                                    <div class="date-item">
+                                        <span class="date-label">Забронировано</span>
+                                        <span class="date-value">{{ res.reservation_date.strftime('%d.%m.%Y') }}</span>
+                                    </div>
+                                    {% if res.status == 'taken' and res.taken_at %}
+                                    <div class="date-item">
+                                        <span class="date-label">Выдано</span>
+                                        <span class="date-value">{{ res.taken_at.strftime('%d.%m.%Y') }}</span>
+                                    </div>
+                                    <div class="date-item">
+                                        <span class="date-label">Вернуть до</span>
+                                        <span class="date-value {% if res.days_left <= 1 %}text-danger fw-bold{% elif res.days_left <= 3 %}text-warning{% endif %}">
+                                            {{ res.return_date.strftime('%d.%m.%Y') }}
+                                        </span>
+                                    </div>
+                                    {% elif res.status == 'ready' and res.confirmed_at %}
+                                    <div class="date-item">
+                                        <span class="date-label">Подтверждено</span>
+                                        <span class="date-value">{{ res.confirmed_at.strftime('%d.%m.%Y') }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if res.status == 'taken' and res.taken_at %}
+                                    <div class="reservation-timeline" 
+                                        data-taken-at="{{ res.taken_at_iso }}"
+                                        data-reservation-id="{{ res.id }}">
+                                        <div class="progress-bar-container">
+                                            <div class="progress-bar-track">
+                                                <div class="progress-bar-fill progress-normal" id="progress-fill-{{ res.id }}"></div>
+                                            </div>
+                                            <span class="progress-text" id="progress-text-{{ res.id }}"></span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Кнопка отмены только для статуса PENDING -->
+                                {% if res.status == 'pending' %}
+                                    <button class="btn btn-outline-danger btn-sm w-100 mt-3" 
+                                            onclick="cancelReservation('{{ res.id }}', '{{ res.reservation_number }}')">
+                                        Отменить бронирование
+                                    </button>
+                                {% endif %}
+                                
+                                <!-- Информация для заблокированного пользователя -->
+                                {% if res.status == 'expired' and current_user.is_blocked %}
+                                    <div class="alert alert-danger alert-sm mt-3 mb-0">
+                                        ⚠️ Вы заблокированы за просрочку возврата. Обратитесь в библиотеку.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state-sm">
+                        <p class="text-muted">У вас нет активных бронирований</p>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-sm">Перейти к каталогу</a>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- History -->
+        <section class="content-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2>История бронирований</h2>
+                    <span class="badge badge-count">{{ history|length }}</span>
+                </div>
+            </div>
+            
+            <div class="section-body">
+                {% if history %}
+                    <div class="history-list">
+                        {% for res in history %}
+                            <div class="history-item">
+                                <div class="history-main">
+                                    <div class="history-book">
+                                        <h4>{{ res.book.title }}</h4>
+                                        <p>{{ res.book.author }}</p>
+                                    </div>
+                                    <div class="history-meta">
+                                        <span class="history-date">{{ res.reservation_date.strftime('%d.%m.%Y') }}</span>
+                                        <span class="badge badge-{{ res.status }}">
+                                            {% if res.status == 'expired' %}
+                                                ⚠️ Просрочена
+                                            {% elif res.status == 'returned' %}
+                                                ✓ Завершена
+                                            {% elif res.status == 'rejected' %}
+                                                ❌ Отклонена
+                                            {% elif res.status == 'cancelled' %}
+                                                ✗ Отменена
+                                            {% elif res.status == 'completed' %}
+                                                ✓ Получена (старая система)
+                                            {% else %}
+                                                {{ res.status }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="history-actions">
+                                    {% if not current_user.is_blocked and is_book_available(res.book_id) %}
+                                        <button class="btn btn-primary btn-sm" onclick="reserveAgain('{{ res.book_id }}')">
+                                            Забронировать снова
+                                        </button>
+                                    {% elif current_user.is_blocked %}
+                                        <span class="text-muted text-sm">🔒 Вы заблокированы</span>
+                                    {% else %}
+                                        <span class="text-muted text-sm">Недоступно</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state-sm">
+                        <p class="text-muted">История бронирований пуста</p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+
+    <!-- Контейнер отзывов -->
+    <div id="tabReviews" style="display: none;">
+        <section class="content-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2>Мои отзывы</h2>
+                </div>
+            </div>
+            <div class="section-body">
+                <div id="myReviewsList">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center mt-3" id="myReviewsPagination"></div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+// Функция обновления таймлайнов для всех выданных книг
+function updateAllTimelines() {
+    const timelines = document.querySelectorAll('.reservation-timeline[data-taken-at]');
+    const now = new Date();
+    
+    timelines.forEach(timeline => {
+        const takenAtStr = timeline.dataset.takenAt;
+        if (!takenAtStr) return;
+        
+        const takenAt = new Date(takenAtStr);
+        const daysRemaining = 30 - Math.floor((now - takenAt) / (1000 * 60 * 60 * 24));
+        const progressPct = Math.min(100, Math.max(0, ((30 - daysRemaining) / 30) * 100));
+        
+        const isUrgent = daysRemaining <= 1;
+        const isWarning = daysRemaining <= 3 && daysRemaining > 1;
+        
+        // Обновляем прогресс-бар
+        const fillBar = timeline.querySelector('.progress-bar-fill');
+        if (fillBar) {
+            fillBar.style.width = progressPct + '%';
+            
+            // Меняем класс в зависимости от срочности
+            fillBar.classList.remove('progress-normal', 'progress-warning', 'progress-urgent');
+            if (isUrgent) {
+                fillBar.classList.add('progress-urgent');
+            } else if (isWarning) {
+                fillBar.classList.add('progress-warning');
+            } else {
+                fillBar.classList.add('progress-normal');
+            }
+        }
+        
+        // Обновляем текст
+        const textSpan = timeline.querySelector('.progress-text');
+        if (textSpan) {
+            textSpan.classList.remove('text-urgent', 'text-warning');
+            if (daysRemaining <= 0) {
+                textSpan.textContent = '⚠️ Срок возврата истёк!';
+                textSpan.classList.add('text-urgent');
+            } else if (daysRemaining === 1) {
+                textSpan.textContent = 'Остался 1 день';
+                textSpan.classList.add('text-urgent');
+            } else {
+                textSpan.textContent = `Осталось ${daysRemaining} дней`;
+                if (isWarning) textSpan.classList.add('text-warning');
+            }
+        }
+    });
+}
+
+// Запускаем при загрузке и обновляем каждую минуту
+document.addEventListener('DOMContentLoaded', function() {
+    updateAllTimelines();
+    setInterval(updateAllTimelines, 60000); // обновляем каждую минуту
+});
+
+// Остальные функции (cancelReservation, reserveAgain) остаются без изменений
+function cancelReservation(reservationId, reservationNumber) {
+    if (confirm(`Отменить бронирование ${reservationNumber}?`)) {
+        fetch(`/cancel_reservation/${reservationId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Произошла ошибка при отмене');
+        });
+    }
+}
+
+function reserveAgain(bookId) {
+    fetch(`/get_reserve_modal/${bookId}`)
+        .then(response => response.text())
+        .then(html => {
+            const modalContainer = document.createElement('div');
+            modalContainer.innerHTML = html;
+            document.body.appendChild(modalContainer);
+            
+            const modalElement = document.getElementById(`reserveModal${bookId}`);
+            if (modalElement) {
+                const bsModal = new bootstrap.Modal(modalElement);
+                bsModal.show();
+                
+                modalElement.addEventListener('hidden.bs.modal', function() {
+                    modalContainer.remove();
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка загрузки:', error);
+            window.location.href = '/';
+        });
+}
+
+// Переключение вкладок
+document.querySelectorAll('#profileTabs .nav-link').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('#profileTabs .nav-link').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        const tabName = this.dataset.tab;
+        document.getElementById('tabReservations').style.display = tabName === 'reservations' ? '' : 'none';
+        document.getElementById('tabReviews').style.display = tabName === 'reviews' ? '' : 'none';
+        
+        if (tabName === 'reviews') {
+            loadMyReviews();
+        }
+    });
+});
+
+let myReviewsPage = 1;
+
+function loadMyReviews(page = 1) {
+    myReviewsPage = page;
+    
+    fetch(`/api/my-reviews?page=${page}&per_page=10`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderMyReviews(data.reviews);
+                renderMyReviewsPagination(data);
+            }
+        });
+}
+
+function renderMyReviews(reviews) {
+    const container = document.getElementById('myReviewsList');
+    
+    if (reviews.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center py-4">У вас пока нет отзывов</p>';
+        return;
+    }
+    
+    container.innerHTML = reviews.map(review => `
+        <div class="my-review-item">
+            <div class="my-review-book">
+                <div class="my-review-cover">
+                    ${review.book_cover 
+                        ? `<img src="/static/uploads/covers/${review.book_cover}" alt="">`
+                        : '<span style="font-size:1.5rem;">📚</span>'
+                    }
+                </div>
+                <div class="my-review-info">
+                    <h4>${escapeHtml(review.book_title)}</h4>
+                    <div class="my-review-rating">${['', '🤮', '☹️', '😐', '😊', '🤩'][review.rating]} (${review.rating})</div>
+                    <div class="my-review-date">${review.created_at} · ${review.status_display}</div>
+                    ${review.rejection_reason ? `<div class="text-danger small mt-1">Причина: ${escapeHtml(review.rejection_reason)}</div>` : ''}
+                </div>
+            </div>
+            ${review.can_edit ? `
+                <button class="btn btn-outline-primary btn-sm" onclick="editMyReview(${review.book_id})">✏️</button>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function renderMyReviewsPagination(data) {
+    const container = document.getElementById('myReviewsPagination');
+    if (data.pages <= 1) { container.innerHTML = ''; return; }
+    
+    let html = '<ul class="pagination pagination-sm">';
+    if (data.page > 1) html += `<li class="page-item"><button class="page-link" onclick="loadMyReviews(${data.page - 1})">«</button></li>`;
+    for (let i = 1; i <= data.pages; i++) {
+        html += `<li class="page-item ${i === data.page ? 'active' : ''}"><button class="page-link" onclick="loadMyReviews(${i})">${i}</button></li>`;
+    }
+    if (data.page < data.pages) html += `<li class="page-item"><button class="page-link" onclick="loadMyReviews(${data.page + 1})">»</button></li>`;
+    html += '</ul>';
+    container.innerHTML = html;
+}
+
+function editMyReview(bookId) {
+    if (typeof openReviewModalPage === 'function') {
+        openReviewModalPage(bookId);
+    }
+}
+</script>
+{% endblock %}

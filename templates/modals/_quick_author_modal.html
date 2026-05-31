@@ -1,0 +1,31 @@
+<!-- Модальное окно быстрого добавления автора -->
+<div class="modal fade" id="quickAuthorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">➕ Быстрое добавление автора</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quick-author-form">
+                    <div class="mb-3">
+                        <label class="form-label">Имя автора</label>
+                        <input type="text" class="form-control" id="quick-author-name" required 
+                            placeholder="Например: Фрэнк Герберт">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Краткая биография (необязательно)</label>
+                        <textarea class="form-control" id="quick-author-bio" rows="3"></textarea>
+                        <small class="text-muted">Можно добавить позже</small>
+                    </div>
+                    <input type="hidden" id="quick-author-target-book">
+                    <input type="hidden" id="quick-author-mode" value="edit">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="quick-author-save">Добавить автора</button>
+            </div>
+        </div>
+    </div>
+</div>

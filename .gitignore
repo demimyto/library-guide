@@ -1,1 +1,10 @@
 venv/
+__pycache__/
+*.pyc
+.env
+instance/
+*.db
+static/uploads/covers/*
+static/uploads/authors/*
+!static/uploads/covers/.gitkeep
+!static/uploads/authors/.gitkeep

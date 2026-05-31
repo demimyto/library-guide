@@ -1,0 +1,26 @@
+<!-- Модальное окно редактирования автора -->
+<div class="modal fade" id="editAuthorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактирование автора</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-author-id">
+                <div class="mb-3">
+                    <label class="form-label">Имя автора</label>
+                    <input type="text" class="form-control" id="edit-author-name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Биография</label>
+                    <textarea class="form-control" id="edit-author-bio"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="save-edit-author">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>

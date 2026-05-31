@@ -1,0 +1,26 @@
+<!-- Модальное окно редактирования книги -->
+<div class="modal fade" id="editBookModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактирование книги</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-book-id">
+                <div class="mb-3">
+                    <label class="form-label">Название</label>
+                    <input type="text" class="form-control" id="edit-book-title">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Описание</label>
+                    <textarea class="form-control" id="edit-book-description" rows="6"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="save-edit-book">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,37 @@
+<!-- Модальное окно выбора авторов для книги -->
+<div class="modal fade" id="authorsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактирование авторов</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3" id="modal-book-title"></p>
+                <input type="hidden" id="modal-book-id">
+                <input type="hidden" id="modal-mode" value="edit">
+                
+                <!-- Список всех авторов с чекбоксами -->
+                <div class="authors-checkbox-list mb-3" id="authors-checkbox-list">
+                    {% for author in all_authors %}
+                        <div class="author-checkbox-item">
+                            <label>
+                                <input type="checkbox" name="modal_author_ids" value="{{ author.id }}" class="author-checkbox">
+                                {{ author.name }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Кнопка добавления нового автора -->
+                <button type="button" class="btn btn-outline-success btn-sm w-100 mt-2" id="modal-quick-add-author">
+                    + Новый автор
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="save-authors-modal">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>

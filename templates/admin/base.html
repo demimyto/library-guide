@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Админ-панель{% endblock %} — Справочная библиотек</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    <!-- Упрощённый navbar -->
+    <nav class="navbar navbar-dark bg-dark admin-navbar">
+        <div class="container-fluid px-3">
+            <a href="{{ url_for('index') }}" class="navbar-brand mb-0 h1">Справочная библиотек</a>
+        </div>
+    </nav>
+
+    <div class="admin-layout">
+        <!-- Боковое меню -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-title-text">Админ-панель</span>
+                <button class="sidebar-collapse" id="sidebarCollapse" title="Свернуть меню">◀</button>
+                <button class="sidebar-close" id="sidebarClose">✕</button>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_fund') }}" 
+                   class="sidebar-item {{ 'active' if request.path == url_for('admin_fund') }}">
+                    <span class="sidebar-icon">📚</span>
+                    <span>Библиотечный фонд</span>
+                </a>
+                <a href="{{ url_for('admin_users') }}" 
+                   class="sidebar-item {{ 'active' if request.path == url_for('admin_users') }}">
+                    <span class="sidebar-icon">👥</span>
+                    <span>Пользователи</span>
+                </a>
+                <a href="{{ url_for('admin_reviews') }}" 
+                class="sidebar-item {{ 'active' if request.path == url_for('admin_reviews') }}">
+                    <span class="sidebar-icon">💬</span>
+                    <span>Отзывы</span>
+                </a>
+                <a href="{{ url_for('admin_authors') }}" 
+                class="sidebar-item {{ 'active' if request.path == url_for('admin_authors') }}">
+                    <span class="sidebar-icon">🪶</span>
+                    <span>Авторы</span>
+                </a>
+                <a href="{{ url_for('admin_stats') }}" 
+                   class="sidebar-item {{ 'active' if request.path == url_for('admin_stats') }}">
+                    <span class="sidebar-icon">📊</span>
+                    <span>Статистика</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="{{ url_for('index') }}" class="sidebar-item">
+                    <span class="sidebar-icon">🏠</span>
+                    <span>На главную</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="sidebar-item sidebar-item-danger">
+                    <span class="sidebar-icon">🚪</span>
+                    <span>Выйти</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Затемнение фона при открытом меню на мобильных -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Основной контент -->
+        <main class="admin-content">
+            <!-- Гамбургер для мобильных -->
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            {% block admin_content %}{% endblock %}
+        </main>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/core/utils.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+    
+    <!-- Скрипт бокового меню -->
+    <script>
+    (function() {
+        const sidebar = document.getElementById('adminSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const closeBtn = document.getElementById('sidebarClose');
+        
+        function openSidebar() {
+            sidebar.classList.add('open');
+            overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        
+        if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (overlay) overlay.addEventListener('click', closeSidebar);
+        
+        // Закрытие по Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                closeSidebar();
+            }
+        });
+    })();
+
+    (function() {
+        const sidebar = document.getElementById('adminSidebar');
+        const collapseBtn = document.getElementById('sidebarCollapse');
+        
+        // Восстановление состояния из localStorage
+        if (localStorage.getItem('adminSidebarCollapsed') === 'true') {
+            sidebar.classList.add('collapsed');
+            if (collapseBtn) collapseBtn.textContent = '▶';
+        }
+        
+        if (collapseBtn) {
+            collapseBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                const isCollapsed = sidebar.classList.contains('collapsed');
+                this.textContent = isCollapsed ? '▶' : '◀';
+                localStorage.setItem('adminSidebarCollapsed', isCollapsed);
+            });
+        }
+    })();
+    </script>
+
+    {% block admin_scripts %}{% endblock %}
+</body>
+</html>

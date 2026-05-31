@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}{{ author.name }} — Справочная библиотек{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Кнопка возврата на главную -->
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+            ← Вернуться к каталогу
+        </a>
+    </div>
+
+    <!-- Шапка с информацией об авторе -->
+    <div class="author-header mb-5">
+        <div class="author-photo">
+            {% if author.photo_filename %}
+                {% set photo_path, photo_ver = file_version('uploads/authors/' + author.photo_filename) %}
+                <img src="{{ url_for('static', filename=photo_path, v=photo_ver) }}" 
+                    alt="{{ author.name }}"
+                    class="author-avatar"
+                    id="author-main-photo">
+            {% else %}
+                <div class="author-avatar-placeholder" id="author-main-placeholder">
+                    {{ author.name[0]|upper }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="author-info">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <h1>{{ author.name }}</h1>
+                {% if current_user.is_authenticated and current_user.is_admin() %}
+                    <button type="button" class="btn btn-outline-secondary btn-sm edit-author-from-page" 
+                            data-author-id="{{ author.id }}"
+                            data-author-name="{{ author.name }}"
+                            data-author-bio="{{ author.bio|default('')|replace('\n', '\\n')|replace('\r', '')|replace('"', '\\"') }}">
+                        ✏️ Редактировать
+                    </button>
+                {% endif %}
+            </div>
+            
+            {% if author.bio %}
+                <div class="author-bio markdown-content" id="author-bio-content">
+                    {{ render_safe_markdown(author.bio) }}
+                </div>
+            {% else %}
+                <p class="text-muted fst-italic" id="author-bio-content">Нет биографии</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Книги автора -->
+    <section class="author-books">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h2 class="section-title m-0">Книги автора</h2>
+            <span class="badge bg-primary rounded-pill">{{ books|length }}</span>
+        </div>
+        
+        {% if books %}
+            <div class="books-grid">
+                {% for book in books %}
+                    {% include 'modals/_book_card.html' %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📚</div>
+                <h3>У автора пока нет книг</h3>
+                <p class="text-muted">Книги этого автора появятся позже</p>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary mt-3">Вернуться к каталогу</a>
+            </div>
+        {% endif %}
+    </section>
+</div>
+
+{% include 'modals/_edit_author_modal.html' %}
+
+<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+<script src="{{ url_for('static', filename='js/core/edit_author.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,52 @@
+<!-- Модальное окно поиска -->
+<div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">Поиск книг</h5>
+                    <p class="modal-subtitle">Найдите книгу по названию, автору, жанру или библиотеке</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Текущий контекст поиска (чипсы) -->
+                <div class="search-context mb-4" id="searchContext">
+                    <!-- Сюда будут добавляться активные фильтры -->
+                </div>
+                
+                <!-- Строка поиска -->
+                <div class="search-input-wrapper mb-3">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input 
+                        type="text" 
+                        class="form-control search-input" 
+                        id="searchInput"
+                        placeholder="Поиск книг..." 
+                        autocomplete="off"
+                        autofocus
+                    >
+                </div>
+                
+                <!-- Фильтры -->
+                <div class="filter-tabs mb-4" id="searchFilterTabs">
+                    <button type="button" class="filter-tab active" data-filter="all">Везде</button>
+                    <button type="button" class="filter-tab" data-filter="title">Название</button>
+                    <button type="button" class="filter-tab" data-filter="author">Автор</button>
+                    <button type="button" class="filter-tab" data-filter="genre">Жанр</button>
+                    <button type="button" class="filter-tab" data-filter="library">Библиотека</button>
+                </div>
+                
+                <!-- Результаты поиска -->
+                <div class="search-results" id="searchResults">
+                    <div class="text-center text-muted py-4">
+                        Начните вводить текст для поиска
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

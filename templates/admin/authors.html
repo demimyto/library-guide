@@ -1,0 +1,147 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Управление авторами — Админ-панель{% endblock %}
+{% block search_button %}{% endblock %}
+
+{% block admin_content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Управление авторами</h1>
+    </div>
+
+    <!-- Форма добавления автора -->
+    <div class="card admin-card mb-4">
+        <div class="card-header card-header-books">
+            <h3>➕ Добавить нового автора</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('add_author') }}" class="ajax-form" id="add-author-form">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" name="name" class="form-control" placeholder="Имя автора" required>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" name="bio" class="form-control" placeholder="Краткая биография (необязательно)">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-success w-100">Добавить</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Список авторов -->
+    <div class="card admin-card">
+        <div class="card-header card-header-books">
+            <h3>📚 Список авторов</h3>
+        </div>
+        <div class="card-body">
+            {% if authors %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Фото</th>
+                                <th>Имя</th>
+                                <th>Биография</th>
+                                <th>Книг</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for author in authors %}
+                            <tr id="author-row-{{ author.id }}">
+                                <td>{{ author.id }}</td>
+                                <td>
+                                    {% if author.photo_filename %}
+                                        {% set photo_path, photo_ver = file_version('uploads/authors/' + author.photo_filename) %}
+                                        <img src="{{ url_for('static', filename=photo_path, v=photo_ver) }}" 
+                                            alt="{{ author.name }}"
+                                            class="author-thumbnail"
+                                            id="author-photo-{{ author.id }}">
+                                    {% else %}
+                                        <div class="author-avatar-placeholder-sm" id="author-photo-placeholder-{{ author.id }}">
+                                            {{ author.name[0]|upper }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <input type="text" name="name" value="{{ author.name }}" 
+                                           class="form-control form-control-sm" 
+                                           form="author-form-{{ author.id }}" required>
+                                </td>
+                                <td>
+                                    <div class="author-bio-preview">
+                                        {% if author.bio %}
+                                            <span class="bio-preview">{{ author.bio[:50] }}{% if author.bio|length > 50 %}...{% endif %}</span>
+                                        {% else %}
+                                            <span class="text-muted">Нет биографии</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary rounded-pill">{{ author.books|length }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary" form="author-form-{{ author.id }}">
+                                            Сохранить
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary btn-icon edit-author-btn"
+                                                data-author-id="{{ author.id }}"
+                                                data-author-name="{{ author.name }}"
+                                                data-author-bio="{{ (author.bio or '')|replace('\\', '\\\\')|replace('\n', '\\n')|replace('\r', '')|replace('"', '\\"') }}">
+                                            ✏️
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary btn-icon btn-author-photo" 
+                                                data-author-id="{{ author.id }}"
+                                                data-author-name="{{ author.name }}"
+                                                data-photo-filename="{{ author.photo_filename or '' }}"
+                                                data-entity-type="author">
+                                            📷
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-author" 
+                                                data-author-id="{{ author.id }}"
+                                                data-author-name="{{ author.name }}"
+                                                data-books-count="{{ author.books|length }}">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% for author in authors %}
+                <form method="post" action="{{ url_for('edit_author', author_id=author.id) }}" 
+                      id="author-form-{{ author.id }}" class="ajax-form"></form>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📚</div>
+                    <p>Пока нет ни одного автора</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Модальные окна -->
+{% include 'modals/_cover_modal.html' %}
+{% include 'modals/_edit_author_modal.html' %}
+
+<!-- EasyMDE для редактирования биографии -->
+<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+{% endblock %}
+
+{% block admin_scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/core/utils.js') }}"></script>
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+<script src="{{ url_for('static', filename='js/core/edit_author.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin/authors.js') }}"></script>
+{% endblock %}

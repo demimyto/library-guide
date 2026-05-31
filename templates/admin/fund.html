@@ -1,0 +1,379 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Библиотечный фонд — Админ-панель{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid p-0">
+    <!-- Global Toggle -->
+    <button class="btn" id="toggle-all-panels">
+        <span>⬇️</span> Развернуть все панели
+    </button>
+
+    <!-- Секция книг -->
+    <div class="card admin-card">
+        <div class="card-header card-header-books">
+            <h3>
+                <span>📚</span>
+                Управление книгами
+            </h3>
+            <button class="collapse-toggle arrow-up" data-bs-target="#books-body"></button>
+        </div>
+        <div class="card-body collapsible" id="books-body">
+            <!-- Форма добавления книги -->
+            <div class="section-title">Добавить новую книгу</div>
+            <form method="post" action="{{ url_for('add_book') }}" class="row g-3 mb-4 p-3 bg-light rounded-3" id="add-book-form" enctype="multipart/form-data">
+                <div class="col-md-5">
+                    <input type="text" name="title" class="form-control" placeholder="Название книги" required>
+                </div>
+                <div class="col-md-4">
+                    <div class="genre-combobox">
+                        <input type="text" class="form-control" id="genreInput" 
+                            placeholder="Жанр *" autocomplete="off" required>
+                        <div class="genre-dropdown" id="genreDropdown" style="display: none;">
+                            <input type="text" class="genre-search" id="genreSearch" 
+                                placeholder="Поиск жанра...">
+                            <div class="genre-list" id="genreList"></div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="genreHidden" name="genre" required>
+                </div>
+                <div class="col-12 mt-3">
+                    <textarea name="description" class="form-control" rows="3" placeholder="Описание книги (можно добавить позже)"></textarea>
+                </div>
+                
+                <!-- Обложка книги -->
+                <div class="col-12 mt-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <button type="button" class="btn btn-outline-secondary btn-cover" 
+                                id="add-book-cover-btn"
+                                data-book-id="new"
+                                data-book-title="Новая книга"
+                                data-cover-filename=""
+                                data-entity-type="book">
+                            📷 Загрузить обложку
+                        </button>
+                        <input type="hidden" name="cover_filename" id="add-book-cover-filename">
+                        <div id="add-book-cover-preview" class="d-none ms-3">
+                            <img src="" alt="Превью" style="max-height: 60px; border-radius: 4px; border: 1px solid var(--slate-200);">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-outline-primary w-100" id="add-book-authors-btn">
+                        👥 Выбрать авторов
+                    </button>
+                    <input type="hidden" name="author_ids" id="add-book-author-ids" value="">
+                    <div class="selected-authors-tags mt-2" id="add-book-selected-authors"></div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-success">Добавить книгу</button>
+                </div>
+            </form>
+
+            <div class="section-title">Список книг</div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Авторы</th>
+                            <th>Жанр</th>
+                            <th width="250">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for book in books %}
+                        <tr id="book-row-{{ book.id }}">
+                            <td>
+                                <input type="text" name="title" value="{{ book.title }}" 
+                                    class="form-control form-control-sm" 
+                                    form="book-form-{{ book.id }}" required>
+                            </td>
+                            <td>
+                                <div class="selected-authors" id="selected-authors-{{ book.id }}" data-book-id="{{ book.id }}">
+                                    {% set authors_list = book.authors %}
+                                    {% if authors_list %}
+                                        <div class="selected-authors-tags">
+                                            {% for author in authors_list[:2] %}
+                                                <span class="author-tag">{{ author.name }}</span>
+                                            {% endfor %}
+                                            {% if authors_list|length > 2 %}
+                                                <span class="author-tag more">+{{ authors_list|length - 2 }}</span>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">{{ book.author }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <button type="button" class="btn btn-sm btn-outline-secondary mt-1 edit-authors-btn" 
+                                        data-book-id="{{ book.id }}"
+                                        data-book-title="{{ book.title }}">
+                                    ✏️ Редактировать авторов
+                                </button>
+                                
+                                <input type="hidden" name="author_ids" value="{% for author in authors_list %}{{ author.id }}{% if not loop.last %},{% endif %}{% endfor %}" 
+                                    form="book-form-{{ book.id }}" id="author-ids-{{ book.id }}">
+                                <input type="hidden" name="author" value="{{ book.author }}" form="book-form-{{ book.id }}">
+                            </td>
+                            <td>
+                                <input type="text" name="genre" value="{{ book.genre }}" 
+                                    class="form-control form-control-sm" 
+                                    form="book-form-{{ book.id }}" required>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" 
+                                            form="book-form-{{ book.id }}">Сохранить</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-cover" 
+                                            data-book-id="{{ book.id }}"
+                                            data-book-title="{{ book.title|e }}"
+                                            data-cover-filename="{{ book.cover_filename or '' }}"
+                                            data-entity-type="book">
+                                        📷 Обложка
+                                    </button>
+                                    <a href="{{ url_for('delete_book', book_id=book.id) }}" 
+                                    class="btn btn-sm btn-outline-danger delete-btn">Удалить</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% for book in books %}
+            <form method="post" action="{{ url_for('edit_book', book_id=book.id) }}" id="book-form-{{ book.id }}" class="ajax-form"></form>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Секция библиотек -->
+    <div class="card admin-card">
+        <div class="card-header card-header-libraries">
+            <h3>
+                <span>🏛️</span>
+                Управление библиотеками
+            </h3>
+            <button class="collapse-toggle arrow-up" data-bs-target="#libraries-body"></button>
+        </div>
+        <div class="card-body collapsible" id="libraries-body">
+            <div class="section-title">Добавить новую библиотеку</div>
+            <form method="post" action="{{ url_for('add_library') }}" class="row g-3 mb-4 p-3 bg-light rounded-3">
+                <div class="col-md-5">
+                    <input type="text" name="name" class="form-control" placeholder="Название библиотеки" required>
+                </div>
+                <div class="col-md-5">
+                    <input type="text" name="address" class="form-control" placeholder="Адрес" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success w-100">Добавить</button>
+                </div>
+            </form>
+
+            <div class="section-title">Список библиотек</div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Адрес</th>
+                            <th width="180">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lib in libraries %}
+                        <tr id="library-row-{{ lib.id }}">
+                            <td>
+                                <input type="text" name="name" value="{{ lib.name }}" class="form-control form-control-sm" form="library-form-{{ lib.id }}" required>
+                            </td>
+                            <td>
+                                <input type="text" name="address" value="{{ lib.address }}" class="form-control form-control-sm" form="library-form-{{ lib.id }}" required>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" form="library-form-{{ lib.id }}">Сохранить</button>
+                                    <a href="{{ url_for('delete_library', library_id=lib.id) }}" class="btn btn-sm btn-outline-danger delete-btn">Удалить</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% for lib in libraries %}
+            <form method="post" action="{{ url_for('edit_library', library_id=lib.id) }}" id="library-form-{{ lib.id }}" class="ajax-form"></form>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Секция привязки книг к библиотекам -->
+    <div class="card admin-card">
+        <div class="card-header card-header-binding">
+            <h3>
+                <span>🔗</span>
+                Привязка книг к библиотекам
+            </h3>
+            <button class="collapse-toggle arrow-up" data-bs-target="#binding-body"></button>
+        </div>
+        <div class="card-body collapsible" id="binding-body">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="section-title">Добавить связь</div>
+                    <form method="POST" action="{{ url_for('add_book_library') }}" class="p-3 bg-light rounded-3" id="add-relation-form">
+                        <div class="mb-3">
+                            <label class="form-label">Выберите книгу:</label>
+                            <select name="book_id" class="form-select" id="add-book-select" required>
+                                <option value="">-- Выберите книгу --</option>
+                                {% for book in books %}
+                                    <option value="{{ book.id }}">{{ book.title }} ({{ book.author }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Выберите библиотеку:</label>
+                            <select name="library_id" class="form-select" id="add-library-select" required disabled>
+                                <option value="">-- Сначала выберите книгу --</option>
+                            </select>
+                            <div class="form-text">Показаны только библиотеки, с которыми книга еще не связана</div>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="add-relation-btn" disabled>Добавить связь</button>
+                    </form>
+                </div>
+        
+                <div class="col-md-6">
+                    <div class="section-title">Удалить связь</div>
+                    <form method="POST" action="{{ url_for('delete_book_library') }}" class="p-3 bg-light rounded-3" id="delete-relation-form">
+                        <div class="mb-3">
+                            <label class="form-label">Выберите книгу:</label>
+                            <select name="book_id" class="form-select" id="delete-book-select" required>
+                                <option value="">-- Выберите книгу --</option>
+                                {% for book in books %}
+                                    <option value="{{ book.id }}">{{ book.title }} ({{ book.author }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Выберите библиотеку:</label>
+                            <select name="library_id" class="form-select" id="delete-library-select" required disabled>
+                                <option value="">-- Сначала выберите книгу --</option>
+                            </select>
+                            <div class="form-text">Показаны только библиотеки, с которыми книга связана</div>
+                        </div>
+                        <button type="submit" class="btn btn-danger" id="delete-relation-btn" disabled>Удалить связь</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Секция управления экземплярами -->
+    <div class="card admin-card">
+        <div class="card-header card-header-copies">
+            <h3>
+                <span>📊</span>
+                Управление экземплярами книг
+            </h3>
+            <button class="collapse-toggle arrow-up" data-bs-target="#copies-body"></button>
+        </div>
+        <div class="card-body collapsible" id="copies-body">
+            <div class="row mb-4 align-items-end">
+                <div class="col-md-8">
+                    <label class="form-label">Выберите библиотеку:</label>
+                    <select class="form-select" id="library-select-stats">
+                        <option value="">-- Выберите библиотеку --</option>
+                        {% for lib in libraries %}
+                            <option value="{{ lib.id }}">{{ lib.name }} ({{ lib.address }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary w-100" id="load-stats-btn" disabled>
+                        Загрузить информацию
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Статистика -->
+            <div class="stats-grid d-none" id="stats-block">
+                <div class="stat-card">
+                    <h3 id="total-books">0</h3>
+                    <p>Всего книг</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="total-copies">0</h3>
+                    <p>Всего экземпляров</p>
+                </div>
+                <div class="stat-card success">
+                    <h3 id="available-copies">0</h3>
+                    <p>Доступно сейчас</p>
+                </div>
+                <div class="stat-card warning">
+                    <h3 id="reserved-copies">0</h3>
+                    <p>Забронировано</p>
+                </div>
+            </div>
+            
+            <!-- Таблица управления -->
+            <div class="d-none" id="management-block">
+                <div class="section-title">Управление количеством экземпляров</div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Книга</th>
+                                <th>Автор</th>
+                                <th>Всего</th>
+                                <th>Доступно</th>
+                                <th>Забронировано</th>
+                                <th width="200">Изменить</th>
+                            </tr>
+                        </thead>
+                        <tbody id="books-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Активные брони -->
+            <div class="mt-4 d-none" id="reservations-block">
+                <div class="section-title">Активные брони</div>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Книга</th>
+                                <th>Пользователь</th>
+                                <th>Дата брони</th>
+                                <th>Истекает через</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reservations-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="text-center text-muted py-5" id="no-data-message">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📚</div>
+                    <p>Выберите библиотеку для просмотра и управления экземплярами книг</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальные окна -->
+{% include 'modals/_cover_modal.html' %}
+{% include 'modals/_authors_modal.html' %}
+{% include 'modals/_quick_author_modal.html' %}
+{% include 'modals/_edit_author_modal.html' %}
+{% endblock %}
+
+{% block admin_scripts %}
+<script src="{{ url_for('static', filename='js/core/genre_combobox.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin/admin.js') }}"></script>
+{% endblock %}

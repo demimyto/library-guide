@@ -1,0 +1,222 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Пользователи — Админ-панель{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid p-0">
+    <!-- Заголовок и действия -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>👥 Пользователи</h1>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" id="btnAddUser">
+                ➕ Добавить пользователя
+            </button>
+            <button class="btn btn-outline-primary" id="btnSelectMode">
+                ☑️ Выбрать
+            </button>
+            <button class="btn btn-outline-danger d-none" id="btnBlockSelected" disabled>
+                🔒 Заблокировать/Разблокировать выбранных
+            </button>
+            <button class="btn btn-outline-danger d-none" id="btnDeleteSelected" disabled>
+                🗑️ Удалить выбранных
+            </button>
+            <button class="btn btn-outline-secondary d-none" id="btnCancelSelect">
+                Отмена
+            </button>
+        </div>
+    </div>
+
+    <!-- Поиск и фильтры -->
+    <div class="card admin-card mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Поиск</label>
+                    <input type="text" class="form-control" id="userSearch" 
+                           placeholder="По логину или email...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Роль</label>
+                    <select class="form-select" id="roleFilter">
+                        <option value="">Все</option>
+                        <option value="user">Пользователи</option>
+                        <option value="librarian">Библиотекари</option>
+                        <option value="admin">Админы</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Статус</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">Все</option>
+                        <option value="active">Активные</option>
+                        <option value="blocked">Заблокированные</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">На странице</label>
+                    <select class="form-select" id="perPageSelect">
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Таблица -->
+    <div class="card admin-card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th class="select-col d-none" width="50"></th>
+                            <th class="sortable" data-sort="id">ID <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="username">Логин <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="email">Email <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="role">Роль <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="is_blocked">Статус <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="active_reservations">Активных броней <span class="sort-icon"></span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Пагинация -->
+    <div class="d-flex justify-content-between align-items-center mt-3" id="paginationContainer">
+        <div class="text-muted" id="paginationInfo"></div>
+        <div id="paginationButtons"></div>
+    </div>
+</div>
+
+<!-- Модалка пользователя -->
+<div class="modal fade" id="userDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">Пользователь</h5>
+                    <p class="modal-subtitle" id="modalUserName"></p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Информация о пользователе -->
+                <div id="userDetailInfo"></div>
+                
+                <!-- Форма редактирования -->
+                <div class="mt-4">
+                    <div class="section-title">Редактирование</div>
+                    <form id="userEditForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Логин</label>
+                                <input type="text" class="form-control" id="editUsername">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="editEmail">
+                                <div class="email-error-message" id="editEmailError"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Роль</label>
+                                <select class="form-select" id="editRole">
+                                    <option value="user">Пользователь</option>
+                                    <option value="librarian">Библиотекарь</option>
+                                    <option value="admin">Админ</option>
+                                </select>
+                            </div>
+                            <div class="col-12 d-none" id="editLibrariesContainer">
+                                <label class="form-label">Библиотеки</label>
+                                <div id="editLibrariesList" class="authors-checkbox-list" style="max-height: 200px; overflow-y: auto;"></div>
+                                <div class="form-text">Выберите библиотеки, к которым будет привязан библиотекарь</div>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Пароль</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="editPassword" 
+                                           placeholder="Оставьте пустым, чтобы не менять">
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleEditPassword">😑</button>
+                                    <button class="btn btn-outline-secondary" type="button" id="clearEditPassword">🧹</button>
+                                    <button class="btn btn-outline-secondary" type="button" id="generateEditPassword">🔄</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Активные брони -->
+                <div class="mt-4">
+                    <div class="section-title">Активные брони</div>
+                    <div id="userReservations"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка создания пользователя -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">➕ Добавить пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label class="form-label">Логин</label>
+                        <input type="text" class="form-control" id="addUsername" required 
+                               placeholder="Минимум 3 символа">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="addEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Роль</label>
+                        <select class="form-select" id="addRole">
+                            <option value="user">Пользователь</option>
+                            <option value="librarian">Библиотекарь</option>
+                            <option value="admin">Админ</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 d-none" id="addLibrariesContainer">
+                        <label class="form-label">Библиотеки</label>
+                        <div id="addLibrariesList" class="authors-checkbox-list" style="max-height: 200px; overflow-y: auto;"></div>
+                        <div class="form-text">Выберите библиотеки, к которым будет привязан библиотекарь</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Пароль</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="addPassword" required>
+                            <button class="btn btn-outline-secondary" type="button" id="toggleAddPassword">😑</button>
+                            <button class="btn btn-outline-secondary" type="button" id="generateAddPassword">🔄</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Создать пользователя</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/admin/users.js') }}"></script>
+{% endblock %}

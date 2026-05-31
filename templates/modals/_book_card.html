@@ -1,0 +1,41 @@
+<article class="book-card-new" data-book-id="{{ book.id }}">
+    <div class="book-cover-container">
+        {% if book.cover_filename %}
+            {% set cover_url = url_for('static', filename='uploads/covers/' + book.cover_filename) %}
+            <div class="book-cover-bg" data-bg="{{ cover_url }}"></div>
+            <img data-src="{{ url_for('static', filename='uploads/covers/' + book.cover_filename) }}" 
+                alt="{{ book.title }}">
+        {% else %}
+            <div class="cover-placeholder-full">📚</div>
+        {% endif %}
+    </div>
+    
+    <div class="book-card-info">
+        <h3 class="book-card-title" title="{{ book.title }}">{{ book.title }}</h3>
+        
+        {% set authors_list = book.authors %}
+        {% if authors_list %}
+            {% set first_author = authors_list[0] %}
+            {% set has_more = authors_list|length > 1 %}
+            {% set hidden_count = authors_list|length - 1 %}
+            
+            <p class="book-card-authors">
+                <a href="{{ url_for('author_page', author_id=first_author.id) }}" 
+                   onclick="event.stopPropagation()"
+                   class="book-card-author-link">
+                    {{ first_author.name }}
+                </a>
+                {% if has_more %}
+                    <span class="book-card-authors-more">и ещё {{ hidden_count }}</span>
+                {% endif %}
+            </p>
+        {% else %}
+            <p class="book-card-authors">{{ book.author }}</p>
+        {% endif %}
+        
+        <!-- Рейтинг (загружается через JS) -->
+        <div class="book-card-rating" data-book-id="{{ book.id }}">
+            <span class="rating-stars" style="opacity: 0; transition: opacity 0.4s ease;"></span>
+        </div>
+    </div>
+</article>

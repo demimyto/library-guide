@@ -1,0 +1,75 @@
+<!-- Модальное окно отзывов -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">Отзывы</h5>
+                    <p class="modal-subtitle" id="reviewBookTitle"></p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Статистика -->
+                <div class="review-stats mb-4" id="reviewStats"></div>
+                
+                <!-- Фильтры и сортировка -->
+                <div class="d-flex gap-2 mb-3 flex-wrap">
+                    <select class="form-select form-select-sm" id="reviewSort" style="width: auto;">
+                        <option value="newest">Сначала новые</option>
+                        <option value="oldest">Сначала старые</option>
+                        <option value="useful">Самые полезные</option>
+                        <option value="positive">Положительные</option>
+                        <option value="negative">Отрицательные</option>
+                    </select>
+                    <div class="btn-group btn-group-sm" id="ratingFilter">
+                        <button class="btn btn-outline-secondary active" data-rating="">Все</button>
+                        <button class="btn btn-outline-secondary" data-rating="5">🤩</button>
+                        <button class="btn btn-outline-secondary" data-rating="4">😊</button>
+                        <button class="btn btn-outline-secondary" data-rating="3">😐</button>
+                        <button class="btn btn-outline-secondary" data-rating="2">☹️</button>
+                        <button class="btn btn-outline-secondary" data-rating="1">🤮</button>
+                    </div>
+                </div>
+                
+                <!-- Кнопка "Оставить отзыв" -->
+                <div class="mb-3" id="reviewWriteBtnContainer" style="display: none;">
+                    <button class="btn btn-primary" id="btnWriteReview">✏️ Написать отзыв</button>
+                </div>
+                
+                <!-- Форма написания/редактирования -->
+                <div class="card bg-light mb-3 d-none" id="reviewFormContainer">
+                    <div class="card-body">
+                        <h6 id="reviewFormTitle">Написать отзыв</h6>
+                        <div class="mb-2">
+                            <label class="form-label">Оценка</label>
+                            <div class="star-rating-input" id="starRatingInput">
+                                <span data-rating="1">🤮</span>
+                                <span data-rating="2">☹️</span>
+                                <span data-rating="3">😐</span>
+                                <span data-rating="4">😊</span>
+                                <span data-rating="5">🤩</span>
+                            </div>
+                            <input type="hidden" id="reviewRating" value="5">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Отзыв</label>
+                            <textarea class="form-control" id="reviewText" rows="4" 
+                                      placeholder="Поделитесь впечатлениями о книге..."></textarea>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success" id="btnSubmitReview">Отправить</button>
+                            <button class="btn btn-outline-secondary" id="btnCancelReview">Отмена</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Список отзывов -->
+                <div id="reviewsList"></div>
+                
+                <!-- Пагинация -->
+                <div class="d-flex justify-content-center mt-3" id="reviewsPagination"></div>
+            </div>
+        </div>
+    </div>
+</div>

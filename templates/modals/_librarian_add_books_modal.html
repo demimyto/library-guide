@@ -1,0 +1,59 @@
+<!-- Модальное окно добавления книг в библиотеку -->
+<div class="modal fade" id="librarianAddBooksModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">Добавить книги в библиотеку</h5>
+                    <p class="modal-subtitle">Выберите книги из каталога или создайте новую</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Строка поиска -->
+                <div class="search-input-wrapper mb-3">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input 
+                        type="text" 
+                        class="form-control search-input" 
+                        id="librarianBookSearch"
+                        placeholder="Поиск книг по названию..." 
+                        autocomplete="off"
+                    >
+                </div>
+
+                <!-- Выбор библиотеки (если несколько) -->
+                <div class="mb-3" id="librarySelectContainer" style="display: none;">
+                    <label class="form-label">Библиотека</label>
+                    <select class="form-select" id="targetLibrarySelect">
+                        <option value="">-- Выберите библиотеку --</option>
+                    </select>
+                </div>
+
+                <!-- Сетка книг -->
+                <div id="librarianBooksGrid" class="books-grid" style="min-height: 200px;">
+                    <div class="text-center text-muted w-100 py-5">
+                        Введите название книги для поиска
+                    </div>
+                </div>
+
+                <!-- Выбранные книги -->
+                <div id="selectedBooksPanel" class="mt-4" style="display: none;">
+                    <div class="section-title">Выбранные книги</div>
+                    <div id="selectedBooksList" class="selected-books-list"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="btnCreateNewBook">
+                    ➕ Создать новую книгу
+                </button>
+                <button type="button" class="btn btn-primary" id="btnAddSelectedBooks" disabled>
+                    Добавить выбранные
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
