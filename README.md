@@ -67,7 +67,7 @@
 
 ```bash
 # 1. Клонировать репозиторий
-git clone https://github.com/demimyto/library_guide.git
+git clone https://github.com/demimyto/library-guide.git
 cd library_guide
 
 # 2. Создать и активировать виртуальное окружение
